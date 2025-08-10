@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaur AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0, 255, 255, 0.2);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar h2 {
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .model-selector {
+            margin-bottom: 30px;
+        }
+
+        .model-selector label {
+            color: #00ffff;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .model-selector select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Main Chat Area */
+        .chat-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.ai {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, rgba(255, 0, 150, 0.3), rgba(0, 255, 255, 0.3));
+            border: 1px solid rgba(255, 0, 150, 0.5);
+        }
+
+        .message.ai .message-content {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(100, 255, 218, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.5);
+        }
+
+        /* Floating Input */
+        .floating-input-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 15px 25px;
+            box-shadow: 0 15px 35px rgba(0, 255, 255, 0.2);
+        }
+
+        #messageInput {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            width: 400px;
+            outline: none;
+        }
+
+        #messageInput::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Floating Buttons */
+        .floating-btn {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            color: #00ffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.3);
+        }
+
+        .floating-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        #sendBtn {
+            bottom: 30px;
+            right: 80px;
+        }
+
+        #plusBtn {
+            bottom: 110px;
+            right: 80px;
+        }
+
+        /* Glowing Effects */
+        .glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            }
+            to {
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.6);
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #00ffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                height: 100%;
+                z-index: 999;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            #messageInput {
+                width: 250px;
+            }
+
+            .floating-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <h2>⚡ Kaur AI</h2>
+            
+            <!-- Model Selector -->
+            <div class="model-selector">
+                <label for="modelSelect">Select Model:</label>
+                <select id="modelSelect">
+                    <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
+                    <option value="google/gemini-pro">Gemini Pro</option>
+                    <option value="meta-llama/llama-2-70b-chat">Llama 2 70B</option>
+                    <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
+                </select>
+            </div>
+
+            <!-- Chat History -->
+            <div class="chat-history" id="chatHistory">
+                <h3 style="color: #00ffff; margin-bottom: 15px;">Chat History</h3>
+                <!-- History items will be added here -->
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-area">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-content">
+                        Hello! I'm Kaur, your AI assistant. How can I help you today? ✨
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Input -->
+    <div class="floating-input-container">
+        <div class="input-wrapper glow">
+            <input type="text" id="messageInput" placeholder="Type your message here..." />
+        </div>
+    </div>
+
+    <!-- Floating Buttons -->
+    <button class="floating-btn" id="sendBtn">➤</button>
+    <button class="floating-btn" id="plusBtn">+</button>
+
+    <script>
+        let currentChat = [];
+        let chatHistory = [];
+
+        // DOM Elements
+        const messageInput = document.getElementById('messageInput');
+        const chatMessages = document.getElementById('chatMessages');
+        const sendBtn = document.getElementById('sendBtn');
+        const plusBtn = document.getElementById('plusBtn');
+        const modelSelect = document.getElementById('modelSelect');
+        const chatHistoryEl = document.getElementById('chatHistory');
+
+        // Event Listeners
+        sendBtn.addEventListener('click', sendMessage);
+        plusBtn.addEventListener('click', newChat);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Send Message Function
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage('user', message);
+            messageInput.value = '';
+
+            // Show loading
+            const loadingDiv = addMessage('ai', '<div class="loading"></div>');
+
+            try {
+                // Send to backend
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        model: modelSelect.value,
+                        history: currentChat
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Remove loading and add AI response
+                loadingDiv.remove();
+                addMessage('ai', data.response);
+
+                // Update current chat
+                currentChat.push({role: 'user', content: message});
+                currentChat.push({role: 'assistant', content: data.response});
+
+            } catch (error) {
+                loadingDiv.remove();
+                addMessage('ai', 'Sorry, I encountered an error. Please try again.');
+                console.error('Error:', error);
+            }
+        }
+
+        // Add Message to Chat
+        function addMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+
+        // New Chat Function
+        function newChat() {
+            currentChat = [];
+            chatMessages.innerHTML = `
+                <div class="message ai">
+                    <div class="message-content">
+                        Hello! I'm Kaur, your AI assistant. How can I help you today? ✨
+                    </div>
+                </div>
+            `;
+            
+            // Save current chat to history if it has messages
+            if (currentChat.length > 0) {
+                saveChatToHistory();
+            }
+        }
+
+        // Save Chat to History
+        function saveChatToHistory() {
+            const chatSummary = currentChat.length > 0 ? 
+                currentChat[0].content.substring(0, 50) + '...' : 
+                'New Chat';
+            
+            const historyItem = {
+                id: Date.now(),
+                summary: chatSummary,
+                messages: [...currentChat],
+                timestamp: new Date().toLocaleString()
+            };
+
+            chatHistory.push(historyItem);
+            updateHistoryUI();
+        }
+
+        // Update History UI
+        function updateHistoryUI() {
+            const historyContainer = chatHistoryEl.querySelector('h3').nextSibling;
+            chatHistory.forEach(item => {
+                const historyDiv = document.createElement('div');
+                historyDiv.className = 'history-item';
+                historyDiv.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 5px;">${item.summary}</div>
+                    <div style="font-size: 12px; opacity: 0.7;">${item.timestamp}</div>
+                `;
+                historyDiv.addEventListener('click', () => loadChat(item));
+                chatHistoryEl.appendChild(historyDiv);
+            });
+        }
+
+        // Load Chat from History
+        function loadChat(chatItem) {
+            currentChat = [...chatItem.messages];
+            chatMessages.innerHTML = '';
+            
+            chatItem.messages.forEach(msg => {
+                addMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            messageInput.focus();
+        });
+    </script>
+</body>
+</html>
